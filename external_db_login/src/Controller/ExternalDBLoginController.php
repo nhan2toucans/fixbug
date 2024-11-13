@@ -56,7 +56,6 @@ class ExternalDBLoginController extends ControllerBase {
     $user->set('langcode', $language);
     $user->set('preferred_langcode', $language);
     $user->set('preferred_admin_langcode', $language);
-    $user->addRole();
     $user->activate();
 
     // Save user account.
@@ -98,22 +97,20 @@ class ExternalDBLoginController extends ControllerBase {
       $auth_password = $this->externalDBLoginService->authUserAccount($email, $password_encrypt);
       $create_new_user = FALSE;
       if ($password_encrypt === 1 || !empty($auth_password)) {
-        if (\Drupal::service('email.validator')->isValid(email)) {
-            $check_user_exist = user_load_by_mail($email);
-          if ($check_user_exist) {
-            $uid = $check_user_exist->get('uid')->value;
-            $create_new_user = $this->updateNewUser($uid, $password);
-            $username = $check_user_exist->get('name')->value;
+        $check_user_exist = user_load_by_mail($email);
+        if ($check_user_exist) {
+          $uid = $check_user_exist->get('uid')->value;
+          $create_new_user = $this->updateNewUser($uid, $password);
+          $username = $check_user_exist->get('name')->value;
+        }
+        else {
+          $username_array = explode('@', $email);
+          $username = $username_array[0];
+          $load_user = user_load_by_name($username);
+          if ($load_user) {
+            $username = $username . '_' . $load_user->get('uid')->value . mt_rand(0, 10000);
           }
-          else {
-            $username_array = explode('@', $email);
-            $username = $username_array[0];
-            $load_user = user_load_by_name($username);
-            if ($load_user) {
-              $username = $username . '_' . $load_user->get('uid')->value . mt_rand(0, 10000);
-            }
-            $create_new_user = $this->createNewUser($username, $email, $password);
-          }
+          $create_new_user = $this->createNewUser($username, $email, $password);
         }
       }
       else {
