@@ -56,7 +56,7 @@ class ExternalDBLoginController extends ControllerBase {
     $user->set('langcode', $language);
     $user->set('preferred_langcode', $language);
     $user->set('preferred_admin_langcode', $language);
-    $user->activate();
+    $user->activate(); 
 
     // Save user account.
     $result = $user->save();
